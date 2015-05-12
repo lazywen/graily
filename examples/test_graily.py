@@ -26,7 +26,7 @@ def main():
 
     app = Graily([
             (r'^/temp/$', Temp),
-            ('^/static/(.*)$', StaticFileHandler.set_path("static")),
+            (r'^/static/(.*)$', StaticFileHandler.set_path("static")),
             (r'^/con/$', ConTest),
             (r'^/(.*)/$', Test),
         ])
