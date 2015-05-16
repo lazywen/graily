@@ -110,7 +110,7 @@ class GrailyPoll:
                             self._sockets[_fd] = request
                             self.epoll.register(request, self.READ | self.ERROR)
                             self._keepalive[request] = time.time()
-                        # TODO wait end of threads
+                        # TODO wait threads exit
                         else: time.sleep(timeout)
 
                     elif event & self.READ:
@@ -215,6 +215,7 @@ class WSGIServer(HTTPServer):
         self.application = application
 
 class Concurrent:
+    # when _concurrency is True, the server will start thread poll
     _concurrency = False
 
     def __init__(self, poll_size, max_tasks, server):
@@ -260,6 +261,15 @@ class Concurrent:
         pass
 
     class register:
+        '''
+        the register decorator can make the method concurrent:
+
+        @Concurrent.register
+        def get(self):
+            self.write("hello, world")
+
+        '''
+
         def __init__(self, func):
             self.func = func
             self.__dict__['_graily_concurrency'] = True
@@ -273,6 +283,14 @@ class Concurrent:
             yield self.func(*new_args, **kwargs)
 
 class BaseRequestHandler:
+    '''
+    The base request handler class, you must implemente those method:
+
+        parse_request
+        verify_request
+        dataReceived
+    '''
+
     def __init__(self, request, server):
         self.request = request
         self.server = server
@@ -319,6 +337,7 @@ class BaseRequestHandler:
         raise NotImplementedError
 
 class StreamRequestHandler(BaseRequestHandler):
+    ''' The request handler for TCPServer '''
     def _initialize(self):
         pass
 
@@ -331,6 +350,8 @@ class StreamRequestHandler(BaseRequestHandler):
         return bool(self.iostream._read_buffer)
 
 class BaseHTTPRequestHandler(BaseRequestHandler):
+    ''' The request hansler for HTTPServer '''
+
     SUPPORT_HTTP_VERSION = ('HTTP/1.0', 'HTTP/1.1')
     HTTP_METHOD = ('HEAD', 'GET', 'POST', 'OPTIONS', 'PUT', 'DELETE', 'TRACE', 'CONNECT')
     ERROR_MESSAGE_TEMPLATE = ('<html>'
@@ -544,6 +565,14 @@ class BaseHTTPRequestHandler(BaseRequestHandler):
         }
 
 class HTTPResponse:
+    '''
+    HTTPResponse is use for handle HTTP method:
+
+    class MainHanlder(HTTPResponse):
+        def get(self):
+            self.write("hello, world")
+    '''
+
     def __init__(self, environ):
         self.base_environ = environ.copy()
         self.headers = {}
