@@ -451,7 +451,7 @@ class BaseHTTPRequestHandler(BaseRequestHandler):
         msg = self.RESPONSES_CODE.get(code)
         body = (self.ERROR_MESSAGE_TEMPLATE % {'code':code, 'msg':msg, 'desc': desc})
         self.set_response_status(code)
-        self.set_header("Content-Type", "text/html")
+        self.set_header("Content-Type", "text/html; charset=UTF-8")
         self.set_header('Connection', 'close')
         self.set_header('Content-Length', int(len(body)))
         self.send_response(body)
@@ -471,7 +471,7 @@ class BaseHTTPRequestHandler(BaseRequestHandler):
             except: pass
             else: self.set_header('Content-Length', str(data_length))
         if "Content-Type" not in self.headers:
-            self.set_header("Content-Type", "text/html")
+            self.set_header("Content-Type", "text/html; charset=UTF-8")
         if type(data) == types.GeneratorType:
             headers_sent = False
             for _d in data:
@@ -788,7 +788,7 @@ class WSGIAppHandler:
 
     def get_headers(self):
         if "Content-Type" not in self.headers:
-            self.headers["Content-Type"] = "text/html"
+            self.headers["Content-Type"] = "text/html; charset=UTF-8"
         return list(self.headers.items())
 
     def process(self):
@@ -810,7 +810,7 @@ class WSGIAppHandler:
             headers = self.get_headers()
         else:
             status = "501 Not Implemented"
-            headers = [('Content-Type', 'text/html')]
+            headers = [('Content-Type', 'text/html; charset=UTF-8')]
         return status, headers
 
     def finish_response(self, write_func):
@@ -1042,7 +1042,7 @@ class Graily:
         try: status, headers = handler.process()
         except:
             status = "500 Internal Server Error"
-            headers = [("Content-Type", "text/plain")]
+            headers = [("Content-Type", "text/plain; charset=UTF-8")]
             start_response(status, headers, sys.exc_info())
             result = []
         else:
