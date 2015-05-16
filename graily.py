@@ -51,7 +51,7 @@ class GrailyPoll:
         self.server_bind()
 
     def init_socket(self):
-        logging.info('Starting server at %s' % str(self.server_address))
+        logging.info('Starting server at {}'.format(self.server_address))
         if self.allow_reuse_address:
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind(self.server_address)
@@ -84,9 +84,9 @@ class GrailyPoll:
 
         try:
             event_pairs = self.epoll.poll(timeout)
-            # logging.debug("event: %s" % event_pairs)
-            # logging.debug("sockets: %s" % [i for i in self._sockets])
-            # logging.debug("handlers: %s" % [ (i.fileno(), self._handlers[i]) for i in self._handlers ])
+            # logging.debug("event: {}".format(event_pairs))
+            # logging.debug("sockets: {}".format([i for i in self._sockets]))
+            # logging.debug("handlers: {}".format([(i.fileno(), self._handlers[i]) for i in self._handlers ]))
         except Exception as e:
             if errno_from_exception(e) == errno.EINTR:
                 return
@@ -388,10 +388,10 @@ class BaseHTTPRequestHandler(BaseRequestHandler):
             self.environ['request_query'] = self.request_query = _urlpar.query
 
             if self.http_version not in self.SUPPORT_HTTP_VERSION:
-                self.send_error(505, "HTTP Version %s Not Supported"%self.http_version)
+                self.send_error(505, "HTTP Version {} Not Supported".format(self.http_version))
                 return False
             if self.command not in self.HTTP_METHOD:
-                self.send_error(405, "Not Allowed: %s"%self.command)
+                self.send_error(405, "Not Allowed: {}".format(self.command))
                 return False
 
             while True:
@@ -432,11 +432,11 @@ class BaseHTTPRequestHandler(BaseRequestHandler):
 
     def send_response(self, body=None):
         if not self.header_sent:
-            self._send_buffer = ("%s %s %s\r\n"%(self.http_version, self.respond_status, \
+            self._send_buffer = ("{} {} {}\r\n".format(self.http_version, self.respond_status, \
                 self.RESPONSES_CODE.get(self.respond_status, '???'))).encode('latin-1', 'strict')
             self.respond_status = 200
             for opt, val in self.headers.items():
-                self._send_buffer += ("%s: %s\r\n"%(opt, val)).encode('latin-1', 'strict')
+                self._send_buffer += ("{}: {}\r\n".format(opt, val)).encode('latin-1', 'strict')
             self._send_buffer += b'\r\n'
             self.headers = {}
             self.header_sent = True
@@ -509,12 +509,12 @@ class BaseHTTPRequestHandler(BaseRequestHandler):
                         self.server.put_task(task)
                     else:
                         if res: self.write(res, finish=True)
-                else: self.send_error(501, "%s Method Not Implemented"%self.command)
+                else: self.send_error(501, "{} Method Not Implemented".format(self.command))
             else:
                 if hasattr(self, self.command):
                     res = getattr(self, self.command)()
                     if res: self.write(res, finish=True)
-                else: self.send_error(501, "%s Method Not Implemented"%self.command)
+                else: self.send_error(501, "{} Method Not Implemented".format(self.command))
 
         if not _concurrency:
             if not self.keep_alive:
@@ -555,7 +555,7 @@ class HTTPResponse:
 class NotFoundHandler(HTTPResponse):
     code = 404
     def get(self, *args):
-        return self.send_error(404, "not found for: %s"%self.request_path)
+        return self.send_error(404, "not found for: {}".format(self.request_path))
     def post(self, *args):
         return self.get(*args)
 
@@ -565,7 +565,7 @@ class StaticFileHandler(HTTPResponse):
         if not self.static_path:
             raise ValueError("static_path not set!")
         if rel_path.endswith('/'):
-            return self.send_error(403, "Your Request Is Forbidden: %s"%rel_path)
+            return self.send_error(403, "Your Request Is Forbidden: {}".format(rel_path))
         path = os.path.join(self.static_path, rel_path)
         if os.path.isfile(path):
             self.set_response_status(200)
@@ -584,7 +584,7 @@ class StaticFileHandler(HTTPResponse):
             # read all contents to memory when request a small file
             if fs[6] < 102400: return f.read()
             else: return self.yield_file(f)
-        else: return self.send_error(404, "Not Found: %s"%rel_path)
+        else: return self.send_error(404, "Not Found: {}".format(rel_path))
 
     def yield_file(self, fd):
         chunk_size = 61440 # <65535
@@ -599,7 +599,7 @@ class StaticFileHandler(HTTPResponse):
             os.path.abspath(__file__)), path)
         if os.path.isdir(full_path):
             StaticFileHandler.static_path = full_path
-        else: raise ValueError("no such path: %s"%full_path)
+        else: raise ValueError("no such path: {}".format(full_path))
         return cls
 
     if not mimetypes.inited:
@@ -675,9 +675,9 @@ class WSGIServerHandler:
     def send_headers(self):
         if 'Content-Length' not in self.headers:
             self.set_header('Content-Length', len(self._send_buffer))
-        _headers = "%s %s\r\n"%(self.environ['SERVER_PROTOCOL'], self.status)
+        _headers = "{} {}\r\n".format(self.environ['SERVER_PROTOCOL'], self.status)
         for k, v in self.headers.items():
-            _headers += "%s: %s\r\n" % (k, v)
+            _headers += "{}: {}\r\n".format(k, v)
         _headers += "\r\n"
         self._write(_headers)
 
@@ -804,8 +804,8 @@ class WSGIAppHandler:
 
             if hasattr(handler, 'code'):
                 code = int(getattr(handler, 'code'))
-                status = "%s %s" % (code, BaseHTTPRequestHandler.RESPONSES_CODE.get(code, "???"))
-            else: status = "%s %s"%(self.respond_status,
+                status = "{} {}".format(code, BaseHTTPRequestHandler.RESPONSES_CODE.get(code, "???"))
+            else: status = "{} {}".format(self.respond_status,
                     BaseHTTPRequestHandler.RESPONSES_CODE.get(self.respond_status, "???"))
             headers = self.get_headers()
         else:
@@ -866,7 +866,7 @@ class BaseIOStream:
                     self.server.handle_exception(e, self.request)
                     return True
             else:
-                # logging.debug('directly sent: %s' % sent)
+                # logging.debug('directly sent: {}'.format(sent))
                 if sent < len(data): data = data[sent:]
                 else: return True
 
@@ -952,13 +952,13 @@ class BaseTemplate:
                 path = full_path
                 break
         if not path:
-            raise ValueError("can't find template: %s" % self.filename)
+            raise ValueError("can't find template: {}".format(self.filename))
         source = open(path, 'rb').read().decode('utf-8')
         return source
 
     def repl(self, match):
         code = match.group(1).strip()
-        if " for " in code: code = "[%s]"%code
+        if " for " in code: code = "[{}]".format(code)
         if code:
             res = eval(code, self.env)
             if type(res) == list: res = "".join(map(str, res))
@@ -1071,4 +1071,3 @@ def make_server(server_address, app, server_class=WSGIServer,
     server = server_class(server_address, handler_class)
     server.set_app(app)
     return server
-
