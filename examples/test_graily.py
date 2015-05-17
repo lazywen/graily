@@ -12,7 +12,7 @@ def main():
 
     class Test(HTTPResponse):
         def get(self, name):
-            return "hello, %s"%name
+            return "hello, {}".format(name)
 
         def post(self, name):
             return template("graily_test.html",
