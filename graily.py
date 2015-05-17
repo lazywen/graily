@@ -79,7 +79,7 @@ class GrailyPoll:
         try: request.close()
         except OSError: pass
 
-    def _run(self, timeout=3):
+    def _run(self, timeout=1):
         # TODO timeout
 
         try:
